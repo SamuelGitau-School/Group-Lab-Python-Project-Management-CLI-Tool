@@ -37,7 +37,10 @@ Team names · course/lab name · date
 ---
 
 ### Member 2 — Persistence & Repositories
+- {**Insight of what is happening**}
 
 ### Member 3 — CLI Commands & Business Logic
+- {**Insight of what is happening**}
 
 ### Member 4 — UX, Testing & Process
+- {**Insight of what is happening**}
