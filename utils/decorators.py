@@ -1,12 +1,12 @@
 """
 decorators.py
-Custom decorators demonstrating a key OOP/functional Python technique:
+Custom decorators demonstrating a key functional Python technique:
   - login_required: blocks a CLI action unless a user session is active
   - admin_required: blocks a CLI action unless the active user is an admin
   - log_action: writes a line to data/activity.log every time a decorated
     function runs (simple audit trail)
 
-These decorate the "command handler" functions in cli/commands, each of
+These decorate the "command handler" functions in CLI, each of
 which receives a `session` object as its first argument.
 """
 
@@ -24,7 +24,7 @@ def _log_path() -> str:
 
 
 def login_required(func):
-    """Ensure a user is logged in (session.current_user is set) before running func."""
+    """Ensure a user is logged in (session.current_user is set) before running function(func)."""
     @functools.wraps(func)
     def wrapper(session, *args, **kwargs):
         if session.current_user is None:

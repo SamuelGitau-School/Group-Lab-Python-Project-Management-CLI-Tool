@@ -14,10 +14,10 @@ class Person:
     def __init__(self, name: str, email: str):
         self._name = None
         self._email = None
-        self.name = name    # goes through setter -> validation
-        self.email = email  # goes through setter -> validation
+        self.name = name    
+        self.email = email
 
-    # ---------- Encapsulated attributes ----------
+    #Encapsulated attributes
     @property
     def name(self) -> str:
         return self._name

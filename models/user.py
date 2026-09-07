@@ -22,8 +22,7 @@ class User(Person):
     and adds authentication + role-based access concerns.
     """
 
-    _id_counter = 1  # class attribute: auto-incrementing id generator
-
+    _id_counter = 1 
     def __init__(self, username: str, name: str, email: str, role: str = "user",
                  user_id: int = None, password: str = None,
                  password_hash: str = None, salt: str = None,
@@ -56,7 +55,7 @@ class User(Person):
         else:
             raise ValueError("Either a plaintext password or a stored hash+salt is required.")
 
-    # ---------- Encapsulation ----------
+    #Encapsulated attributes
     @property
     def username(self) -> str:
         return self._username
@@ -82,7 +81,7 @@ class User(Person):
     def is_admin(self) -> bool:
         return self._role == "admin"
 
-    # ---------- Password handling (private-ish, name-mangled helpers) ----------
+    #Password handling (private-ish, name-mangled helpers)
     @staticmethod
     def _hash_password(password: str, salt: str) -> str:
         dk = hashlib.pbkdf2_hmac(
@@ -99,7 +98,7 @@ class User(Person):
         self._salt = binascii.hexlify(os.urandom(16)).decode()
         self._password_hash = self._hash_password(new_password, self._salt)
 
-    # ---------- Serialization ----------
+    # Serialization
     def to_dict(self) -> dict:
         return {
             "user_id": self.user_id,
