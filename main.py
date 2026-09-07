@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 """
-main.py
-TaskFlow - a CLI project management tool.
-
 Usage:
     python main.py                              -> interactive menu mode
     python main.py register -u bob -n "Bob" -e bob@x.com -p secret
