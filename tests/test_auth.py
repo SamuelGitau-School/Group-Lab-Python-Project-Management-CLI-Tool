@@ -16,7 +16,6 @@ import pytest
 
 @pytest.fixture
 def auth_manager(tmp_path, monkeypatch):
-    # Redirect storage paths to a temp directory for test isolation
     import utils.storage as storage
     monkeypatch.setattr(storage, "DATA_DIR", str(tmp_path))
     monkeypatch.setattr(storage, "USERS_FILE", str(tmp_path / "users.json"))

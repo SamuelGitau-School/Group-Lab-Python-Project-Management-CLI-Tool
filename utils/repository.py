@@ -31,7 +31,7 @@ class UserRepository:
     @staticmethod
     def _key(username: str) -> str:
         # User.username always stores lowercase/stripped, so lookups
-        # must normalize the same way or a differently-cased duplicate
+        # must normalize the same way
         # (e.g. registering "Grace" after "GRACE") would slip past
         # exists() and silently overwrite instead of being rejected.
         return (username or "").strip().lower()
