@@ -28,8 +28,8 @@ class User(Person):
     # unique numeric id, separate from its username.
     _id_counter = 0
 
-    def __init__(self, username: str, password_hash: str, raw_password: str ,
-                 name: str , email: str ):
+    def __init__(self, username: str, raw_password: str = None, password_hash: str = None,
+                 name: str = None, email: str = None):
         display_name = name or username
         contact_email = email or f"{username}@chess.local"
         super().__init__(display_name, contact_email)
@@ -83,7 +83,6 @@ class User(Person):
         role = data.get("role", "user")
         cls = Admin if role == "admin" else User
         return cls(
-            raw_password=data["password_hash"],
             username=data["username"],
             password_hash=data["password_hash"],
             name=data.get("name"),

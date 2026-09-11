@@ -25,11 +25,11 @@ persistent JSON storage.
   and every possible destination (`x`).
 - **External package**: uses [`tabulate`](https://pypi.org/project/tabulate/)
   to render the move list and admin activity log as clean tables.
-- **Class attributes**: `Piece` and `User` each keep a class-level
-  `_id_counter` so every instance gets a unique numeric ID.
-- **Property setters**: `Piece.color` and `Piece.position` are real
-  properties with setters that validate input before writing to the
-  underlying `_color`/`_position` attributes.
+- **Class attributes**: `User` keeps a class-level `_id_counter` so
+  every account gets a unique numeric ID.
+- **Property / validation**: `Piece.__init__` validates `color` before
+  it's ever set, and `Piece.position` is a read-only property derived
+  from `row`/`col` (use `move_to()` to change them).
 - **Unit tests** with `pytest`, including mocked input/output tests
   for the interactive REPL (`tests/test_cli_io.py`).
 
@@ -42,21 +42,22 @@ chess_cli/
 ├── session.py              # Session state (current logged-in user)
 ├── commands.py             # Command functions (decorated business logic)
 ├── models/
-│   ├── piece.py            # Piece, Bishop, Knight, Queen
-│   ├── board.py             # ASCII board rendering
+│   ├── pieces.py           # Piece (ABC), Bishop, Knight, Queen
+│   ├── board.py             # Board: placement, legal-move checks, ASCII render
 │   └── user.py               # User / Admin
 ├── auth/
 │   └── auth_manager.py       # Register / login logic
 ├── utils/
 │   ├── security.py             # Password hashing (PBKDF2 + salt)
-│   ├── storage.py                # JSON persistence
-│   └── decorators.py               # login_required, admin_required, log_action, validate_piece_name
+│   ├── storage.py                # JSON persistence (users dict + activity log)
+│   ├── repository.py               # UserRepository (find_by_username/exists/add)
+│   └── decorators.py                 # login_required, admin_required, log_action(...), validate_piece_name
 ├── data/
-│   ├── users.json                    # Created on first registration
-│   └── activity_log.json               # Created on first logged action
+│   ├── users.json                      # Created on first registration
+│   └── activity_log.json                 # Created on first logged action
 ├── tests/
-│   ├── test_pieces.py                    # Move-generation unit tests
-│   └── test_auth.py                        # Registration/login unit tests
+│   ├── test_auth.py                        # Registration/login/session-persistence tests
+│   └── test_cli_io.py                        # Mocked-input tests for the interactive REPL
 ├── requirements.txt
 └── README.md
 ```
@@ -121,8 +122,9 @@ pytest
   files with no locking, so concurrent writes from multiple processes
   at the exact same moment could race. Fine for a single-user CLI,
   not for concurrent multi-user use.
-- The in-memory `_id_counter` on `Piece`/`User` resets every time the
-  program restarts, so IDs are only unique within a single run/process.
+- The in-memory `_id_counter` on `User` resets every time the program
+  restarts, so ids are only unique within a single run/process (the
+  users themselves still persist fine across runs via `data/users.json`).
 
 ## Git workflow
 
