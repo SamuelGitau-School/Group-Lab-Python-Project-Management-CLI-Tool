@@ -16,8 +16,6 @@ class Person:
     """
 
     def __init__(self, name: str, email: str):
-        self._name = None
-        self._email = None
         self.name = name
         self.email = email
 
