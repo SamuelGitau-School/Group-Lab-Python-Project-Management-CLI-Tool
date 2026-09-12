@@ -16,6 +16,8 @@ are validated the same way TaskFlow's are, without forcing every
 existing `register <username> <password>` call to change.
 """
 
+from typing import Optional
+
 from models.person import Person
 from utils.security import hash_password, verify_password
 
@@ -28,8 +30,16 @@ class User(Person):
     # unique numeric id, separate from its username.
     _id_counter = 0
 
-    def __init__(self, username: str, raw_password: str = None, password_hash: str = None,
-                 name: str = None, email: str = None):
+    # BUG (fixed): was
+    #     def __init__(self, username: str, raw_password: str = None, password_hash: str = None,
+    #                  name: str = None, email: str = None):
+    # Same contradiction as hash_password() in utils/security.py - four
+    # parameters typed as `str` but defaulted to `None`. All four are
+    # genuinely optional at the call sites (see docstring above: only
+    # username/password/role are required at registration), so
+    # `Optional[str]` is the accurate annotation, not a workaround.
+    def __init__(self, username: str, raw_password: Optional[str] = None, password_hash: Optional[str] = None,
+                 name: Optional[str] = None, email: Optional[str] = None):
         display_name = name or username
         contact_email = email or f"{username}@chess.local"
         super().__init__(display_name, contact_email)

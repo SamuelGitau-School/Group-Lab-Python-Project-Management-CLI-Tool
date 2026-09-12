@@ -51,9 +51,27 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _maybe_login(session: Session, args) -> None:
+# BUG (fixed): this function used to be
+#     def _maybe_login(session, args) -> None:
+#         if getattr(args, "username", None) and getattr(args, "password", None):
+#             session.login(args.username, args.password)
+# session.login()'s bool return value was discarded, so a wrong
+# --username/--password on a one-shot show-moves/log call silently
+# failed and fell through to login_required's generic "You must be
+# logged in" message - misleading, since credentials WERE supplied
+# and specifically rejected. Now the result is returned so callers
+# can report the real reason.
+def _maybe_login(session: Session, args) -> bool:
+    """Log in with inline --username/--password if both were given.
+
+    Returns False only when credentials were explicitly supplied and
+    rejected, so the caller can report that distinctly from "not
+    logged in at all". Returns True when no credentials were given
+    (nothing to do) or when the login succeeded.
+    """
     if getattr(args, "username", None) and getattr(args, "password", None):
-        session.login(args.username, args.password)
+        return session.login(args.username, args.password)
+    return True
 
 
 def dispatch(args, session: Session) -> None:
@@ -62,7 +80,17 @@ def dispatch(args, session: Session) -> None:
         print(message)
 
     elif args.command == "login":
+        # BUG (fixed): was
+        #     if c.cmd_login(session, args.username, args.password):
+        #         print(f"Welcome back, {session.current_user.username}.")
+        # `session.current_user` is Optional[User] - it's None until a
+        # login succeeds. A True return from cmd_login() DOES guarantee
+        # session.current_user is set (see Session.login in session.py),
+        # but that guarantee lives inside a function call, so a type
+        # checker can't see it and flags .username as possibly-on-None.
+        # The assert makes the invariant explicit (and narrows the type).
         if c.cmd_login(session, args.username, args.password):
+            assert session.current_user is not None
             print(f"Welcome back, {session.current_user.username}.")
         else:
             print("Invalid username or password.")
@@ -73,7 +101,11 @@ def dispatch(args, session: Session) -> None:
         print("Logged out." if was_logged_in else "You were not logged in.")
 
     elif args.command == "show-moves":
-        _maybe_login(session, args)
+        # BUG (fixed): used to be a bare `_maybe_login(session, args)`
+        # call with no check on the result - see _maybe_login above.
+        if not _maybe_login(session, args):
+            print("Invalid username or password.")
+            return
         result = c.cmd_show_moves(session, args.piece, args.square)
         if result is None:
             return
@@ -86,7 +118,11 @@ def dispatch(args, session: Session) -> None:
             print("No legal moves from this square.")
 
     elif args.command == "log":
-        _maybe_login(session, args)
+        # BUG (fixed): same issue as show-moves above - was a bare
+        # `_maybe_login(session, args)` call with the result ignored.
+        if not _maybe_login(session, args):
+            print("Invalid username or password.")
+            return
         entries = c.cmd_log(session)
         if entries is None:
             return

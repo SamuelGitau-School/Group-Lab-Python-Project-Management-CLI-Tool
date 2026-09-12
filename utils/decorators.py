@@ -57,13 +57,37 @@ def validate_piece_name(func):
     return wrapper
 
 
+def _call_succeeded(result) -> bool:
+    """Interpret a handler's return value as success/failure.
+
+    - cmd_login returns a plain bool.
+    - cmd_register returns an (ok, message) tuple.
+    - Anything else (e.g. cmd_show_moves's (piece, moves) tuple) has no
+      pass/fail signal of its own, so it's treated as a success - the
+      caller already raises ValueError for the failure cases it has.
+    """
+    if isinstance(result, bool):
+        return result
+    if isinstance(result, tuple) and result and isinstance(result[0], bool):
+        return result[0]
+    return True
+
+
 def log_action(description: str):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(session, *args, **kwargs):
             result = func(session, *args, **kwargs)
-            who = session.current_user.username if session.current_user else "anonymous"
-            log_activity(who, description)
+            # BUG (fixed): this used to be
+            #     who = session.current_user.username if session.current_user else "anonymous"
+            #     log_activity(who, description)
+            # with no check on `result` at all, so log_activity() ran on
+            # EVERY call, including failed ones (duplicate register, wrong
+            # password on login) - the audit trail recorded failures as
+            # successes. Now it only logs when the call actually succeeded.
+            if _call_succeeded(result):
+                who = session.current_user.username if session.current_user else "anonymous"
+                log_activity(who, description)
             return result
         return wrapper
     return decorator
